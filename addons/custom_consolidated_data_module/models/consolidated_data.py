@@ -1,4 +1,3 @@
-
 from odoo import models, fields, api
 import csv
 import base64
