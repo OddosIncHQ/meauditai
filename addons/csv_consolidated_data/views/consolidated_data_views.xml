@@ -1,0 +1,72 @@
+<odoo>
+    <!-- Define the search view -->
+    <record id="view_consolidated_data_search" model="ir.ui.view">
+        <field name="name">consolidated.data.search</field>
+        <field name="model">consolidated.data</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="rut"/>
+                <field name="csv_file_name"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Define the form view -->
+    <record id="view_consolidated_data_form" model="ir.ui.view">
+        <field name="name">consolidated.data.form</field>
+        <field name="model">consolidated.data</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="rut"/>
+                        <field name="csv_file_name"/>
+                        <field name="csv_file_date"/>
+                        <field name="document_id"/>
+                        <field name="sharing_url"/>
+                    </group>
+                    <notebook>
+                        <page string="Activity Codes">
+                            <field name="activity_codes">
+                                <tree>
+                                    <field name="code"/>
+                                    <field name="description"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Define the tree view -->
+    <record id="view_consolidated_data_tree" model="ir.ui.view">
+        <field name="name">consolidated.data.tree</field>
+        <field name="model">consolidated.data</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="rut"/>
+                <field name="csv_file_name"/>
+                <field name="csv_file_date"/>
+                <field name="sharing_url"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Define the action -->
+    <record id="action_consolidated_data" model="ir.actions.act_window">
+        <field name="name">Consolidated Data</field>
+        <field name="res_model">consolidated.data</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_consolidated_data_search"/>
+        <field name="view_ids" eval="[(5, 0, 0), 
+                                       (0, 0, {'view_mode': 'tree', 'view_id': ref('view_consolidated_data_tree')}), 
+                                       (0, 0, {'view_mode': 'form', 'view_id': ref('view_consolidated_data_form')})]"/>
+    </record>
+
+    <!-- Define the menu item -->
+    <menuitem id="menu_consolidated_data" name="Consolidated Data"
+              parent="base.menu_custom"
+              action="action_consolidated_data"/>
+</odoo>
