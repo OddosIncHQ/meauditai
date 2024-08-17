@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_csv_upload_user,csv_upload_user,model_csv_upload,base.group_user,1,1,1,1
+access_consolidated_data_user,consolidated_data_user,model_consolidated_data,base.group_user,1,1,1,1
