@@ -1,4 +1,3 @@
-
 {
     'name': 'Custom Consolidated Data Module',
     'version': '17.0',
