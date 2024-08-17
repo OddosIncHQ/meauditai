@@ -1,4 +1,3 @@
-
 <odoo>
     <record id="view_consolidated_data_search" model="ir.ui.view">
         <field name="name">consolidated.data.search</field>
