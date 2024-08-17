@@ -1,3 +1,4 @@
+
 {
     'name': 'Custom Consolidated Data Module',
     'version': '17.0',
@@ -9,8 +10,10 @@
     'data': [
         'views/consolidated_data_views.xml',
         'views/csv_upload_views.xml',
+        'security/ir.model.access.csv',
     ],
     'installable': True,
-    'application': False,
+    'application': True,  # Set the module as an application
     'auto_install': False,
+    'images': ['static/description/icon.png'],  # Reference the icon
 }
