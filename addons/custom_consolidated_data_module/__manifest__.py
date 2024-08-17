@@ -1,7 +1,7 @@
 
 {
-    'name': 'CSV Consolidated Data Module',
-    'version': '17.0.0.1',
+    'name': 'Custom Consolidated Data Module',
+    'version': '17.0',
     'summary': 'Module to manage declarative data and CSV processing',
     'description': 'This module handles activity codes, forms, offices, contributor types, sworn declarations, and entity types, with CSV processing capabilities.',
     'category': 'Custom',
