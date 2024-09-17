@@ -4,7 +4,34 @@ from odoo import models, fields, api, _
 from datetime import timedelta
 from odoo.exceptions import ValidationError
 
+class CrossoveredBudgetLines(models.Model):
+    _inherit = 'crossovered.budget.lines'
 
+    x_studio_aumdis_autorizado = fields.Float('Aum/Dis Autorizado')
+    x_studio_por_ejecutar_neto_me = fields.Float('Por Ejecutar Neto Me')
+
+    custom_currency_id = fields.Many2one(
+        'res.currency',
+        related="crossovered_budget_id.custom_currency_id"
+    )
+    custom_planned_amount = fields.Monetary(
+        compute='_compute_custom_planned_amount',
+        string='Planned Amount (Other Currency)',
+        store=True,
+        required=True,
+        help="Amount you plan to earn/spend. Record a positive amount if it is a revenue and a negative amount if it is a cost.",
+        currency_field='custom_currency_id',
+        inverse="_inverse_custom_planned_amount"
+    )
+
+    @api.constrains('x_studio_aumdis_autorizado', 'x_studio_por_ejecutar_neto_me')
+    def check_input_values(self):
+        for record in self:
+            # Ensure only one field has a non-zero or non-null value
+            if record.x_studio_aumdis_autorizado and record.x_studio_por_ejecutar_neto_me:
+                if record.x_studio_aumdis_autorizado != 0 and record.x_studio_por_ejecutar_neto_me != 0:
+                    raise ValidationError("You can only input a value in one of the currency fields (Aum/Dis Autorizado or Por Ejecutar Neto Me), not both.")
+    
 class CrossoveredBudget(models.Model):
     _inherit = 'crossovered.budget'
 
