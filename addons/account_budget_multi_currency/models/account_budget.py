@@ -145,7 +145,7 @@ class CrossoveredBudgetLines(models.Model):
                           ]
                 if acc_ids:
                     domain += [('general_account_id', 'in', acc_ids)]
-                
+
                 analytic_line_ids = analytic_line_obj.search(domain)
                 for analytic_line_id in analytic_line_ids:
                     amount_in_budget_curr += line.currency_id._convert(analytic_line_id.amount, line.custom_currency_id, line.company_id, analytic_line_id.date)
