@@ -7,21 +7,21 @@ from odoo.exceptions import ValidationError
 class CrossoveredBudgetLines(models.Model):
     _inherit = 'crossovered.budget.lines'
 
-    x_studio_aumdis_autorizado = fields.Float('Aum/Dis Autorizado')
-    x_studio_por_ejecutar_neto_me = fields.Float('Por Ejecutar Neto Me')
+    # Define x_studio_aumdis_autorizado as Monetary
+    x_studio_aumdis_autorizado = fields.Monetary(
+        string='Aum/Dis Autorizado',
+        currency_field='custom_currency_id'  # The currency field related to this amount
+    )
+
+    # Define x_studio_por_ejecutar_neto_me as Monetary
+    x_studio_por_ejecutar_neto_me = fields.Monetary(
+        string='Por Ejecutar Neto Me',
+        currency_field='custom_currency_id'  # The currency field related to this amount
+    )
 
     custom_currency_id = fields.Many2one(
         'res.currency',
         related="crossovered_budget_id.custom_currency_id"
-    )
-    custom_planned_amount = fields.Monetary(
-        compute='_compute_custom_planned_amount',
-        string='Planned Amount (Other Currency)',
-        store=True,
-        required=True,
-        help="Amount you plan to earn/spend. Record a positive amount if it is a revenue and a negative amount if it is a cost.",
-        currency_field='custom_currency_id',
-        inverse="_inverse_custom_planned_amount"
     )
 
     @api.constrains('x_studio_aumdis_autorizado', 'x_studio_por_ejecutar_neto_me')
