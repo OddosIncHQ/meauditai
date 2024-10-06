@@ -1,0 +1,20 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <!-- Heredar la vista del formulario de pedido de venta -->
+        <record id="view_order_form_ceec_inherit" model="ir.ui.view">
+            <field name="name">sale.order.form.ceec.inherit</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <!-- Agregar el campo del descuento CEEC en la parte inferior del formulario -->
+                <xpath expr="//field[@name='amount_total']" position="before">
+                    <field name="x_studio_credito_ceec" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
