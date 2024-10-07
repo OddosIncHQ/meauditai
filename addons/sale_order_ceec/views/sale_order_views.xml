@@ -6,9 +6,11 @@
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
-                <!-- Agregar el campo del descuento CEEC en la parte inferior del formulario -->
-                <xpath expr="//field[@name='amount_total']" position="before">
-                    <field name="x_studio_credito_ceec" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <!-- Add the CEEC discount field before the total amount in the sale order form footer -->
+                <xpath expr="//group[@name='sale_total']/field[@name='tax_totals']" position="before">
+                    <group colspan="2">
+                        <field name="x_studio_credito_ceec" widget="monetary" options="{'currency_field': 'currency_id'}" string="CEEC Discount"/>
+                    </group>
                 </xpath>
             </field>
         </record>
