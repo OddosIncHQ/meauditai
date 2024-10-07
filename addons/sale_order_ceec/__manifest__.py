@@ -2,6 +2,7 @@
 {
     'name': 'CEEC 65% Discount in Sale Order',
     'version': '1.0',
+    'license': 'LGPL-3',
     'summary': 'Apply CEEC 65% discount in sale orders based on product tax and code.',
     'category': 'Sales',
     'author': 'Your Name or Company',
