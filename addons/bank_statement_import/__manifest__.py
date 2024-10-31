@@ -1,16 +1,17 @@
 {
-    'name': 'Bank Statement Normalization',
+    'name': 'Bank Statement Import',
     'version': '1.0',
-    'summary': 'Normalize bank statements for multiple banks',
-    'description': '''
-    This module processes bank statements from different banks and normalizes them into a common format.
-    ''',
+    'category': 'Accounting',
+    'summary': 'Import bank statements from Excel files',
+    'description': """
+        This module allows users to import bank statement transactions from .xlsx files.
+    """,
     'author': 'Your Name',
-    'depends': ['base'],
+    'depends': ['base', 'account'],
     'data': [
-        'security/ir.model.access.csv',
-        'views/bank_statement_normalization_view.xml',
+        'views/bank_statement_import_wizard_view.xml',
+        'views/bank_statement_menu.xml',
     ],
     'installable': True,
-    'application': True,
+    'application': False,
 }
