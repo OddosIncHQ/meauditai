@@ -1,144 +1,48 @@
-import base64
-import io
-import pdfplumber
-import pandas as pd
-import csv
-import ofxparse
-from ofxparse import OfxParser
-import xml.etree.ElementTree as ET
 from odoo import models, fields, api
-from odoo.exceptions import UserError
+import base64
+import pandas as pd
+from io import BytesIO
 
-class BankStatementNormalization(models.Model):
-    _name = 'bank.statement.normalization'
-    _description = 'Bank Statement Normalization'
+class BankStatementImportWizard(models.TransientModel):
+    _name = 'bank.statement.import.wizard'
+    _description = 'Import Bank Statement from Excel'
 
-    name = fields.Char(string='Name', required=True)
-    file_type = fields.Selection([
-        ('pdf', 'PDF'),
-        ('xlsx', 'Excel'),
-        ('csv', 'CSV'),
-        ('ofx', 'OFX'),
-        ('camt', 'CAMT'),
-        ('qif', 'QIF')
-    ], string='File Type', required=True, default='pdf')
-    file = fields.Binary(string='Statement File', required=True)
-    bank_name = fields.Selection([
-        ('santander', 'Santander'),
-        ('consorcio', 'Consorcio'),
-        ('bbva', 'BBVA'),
-        ('bci', 'BCI'),
-    ], string='Bank Name', required=True)
-    qif_separator = fields.Char(string='QIF Separator', default='\n')
-    processed_data = fields.Binary(string='Processed Data', readonly=True)
+    file_data = fields.Binary(string="Excel File", required=True)
+    file_name = fields.Char(string="File Name")
 
-    def process_statement(self):
-        self.ensure_one()
-        file_content = base64.b64decode(self.file)
+    def import_bank_statement(self):
+        # Decode file and load data
+        file_content = base64.b64decode(self.file_data)
+        file_data = BytesIO(file_content)
+        
+        # Read the Excel file using pandas
+        df = pd.read_excel(file_data)
 
-        if self.file_type == 'pdf':
-            transactions = self._process_pdf(file_content, self.bank_name)
-        elif self.file_type == 'xlsx':
-            transactions = self._process_xlsx(file_content, self.bank_name)
-        elif self.file_type == 'csv':
-            transactions = self._process_csv(file_content, self.bank_name)
-        elif self.file_type == 'ofx':
-            transactions = self._process_ofx(file_content, self.bank_name)
-        elif self.file_type == 'camt':
-            transactions = self._process_camt(file_content, self.bank_name)
-        elif self.file_type == 'qif':
-            transactions = self._process_qif(file_content, self.bank_name, self.qif_separator)
-        else:
-            raise UserError("Unsupported file type!")
-
-        df = pd.DataFrame(transactions)
-        output = io.BytesIO()
-        df.to_excel(output, index=False)
-        self.processed_data = base64.b64encode(output.getvalue())
-
-    def _process_pdf(self, file_content, bank_name):
+        # Mapping the columns based on the Python code provided
         transactions = []
-        with pdfplumber.open(io.BytesIO(file_content)) as pdf:
-            for page in pdf.pages:
-                text = page.extract_text()
-                lines = text.split('\n')
-                transactions.extend(self._process_lines(lines, bank_name))
-        return transactions
+        for _, row in df.iterrows():
+            transaction = {
+                'Fecha': row['Fecha'],
+                'Descripcion': row['Descripcion'],
+                'Documento': row.get('N° Documento', ''),
+                'Cargos': row.get('Cargos', 0),
+                'Abonos': row.get('Abonos', 0),
+                'Saldo': row['Saldo']
+            }
+            transactions.append(transaction)
 
-    def _process_xlsx(self, file_content, bank_name):
-        transactions = []
-        file_stream = io.BytesIO(file_content)
-        df = pd.read_excel(file_stream)
-        for index, row in df.iterrows():
-            lines = [str(row[column]) for column in df.columns]
-            transactions.extend(self._process_lines(lines, bank_name))
-        return transactions
+        # Import each transaction into the `bank.statement.processor`
+        bank_statement = self.env['bank.statement.processor'].create({
+            'name': self.file_name,
+            'extracted_data': str(transactions)
+        })
 
-    def _process_csv(self, file_content, bank_name):
-        transactions = []
-        file_stream = io.StringIO(file_content.decode('utf-8'))
-        reader = csv.reader(file_stream)
-        for row in reader:
-            lines = [str(cell) for cell in row]
-            transactions.extend(self._process_lines(lines, bank_name))
-        return transactions
-
-    def _process_ofx(self, file_content, bank_name):
-        transactions = []
-        ofx = OfxParser.parse(io.BytesIO(file_content))
-        for transaction in ofx.account.statement.transactions:
-            lines = [
-                transaction.date.strftime('%Y-%m-%d'),
-                transaction.payee,
-                str(transaction.amount)
-            ]
-            transactions.extend(self._process_lines(lines, bank_name))
-        return transactions
-
-    def _process_camt(self, file_content, bank_name):
-        transactions = []
-        root = ET.fromstring(file_content)
-        for entry in root.findall('.//Ntry'):
-            date = entry.find('.//BookgDt/Dt').text
-            amount = entry.find('.//Amt').text
-            detail = entry.find('.//RmtInf/Ustrd').text if entry.find('.//RmtInf/Ustrd') is not None else ''
-            lines = [date, detail, amount]
-            transactions.extend(self._process_lines(lines, bank_name))
-        return transactions
-
-    def _process_qif(self, file_content, bank_name, separator):
-        transactions = []
-        file_stream = io.StringIO(file_content.decode('utf-8'))
-        current_transaction = {}
-        for line in file_stream.read().split(separator):
-            if line.startswith('D'):
-                current_transaction['Date'] = line[1:].strip()
-            elif line.startswith('T'):
-                current_transaction['Amount'] = line[1:].strip()
-            elif line.startswith('P'):
-                current_transaction['Detail'] = line[1:].strip()
-            elif line.startswith('^'):
-                if current_transaction:
-                    lines = [
-                        current_transaction.get('Date'),
-                        current_transaction.get('Detail'),
-                        current_transaction.get('Amount')
-                    ]
-                    transactions.extend(self._process_lines(lines, bank_name))
-                    current_transaction = {}
-        return transactions
-
-    def _process_lines(self, lines, bank_name):
-        transactions = []
-        if bank_name == 'santander':
-            transactions.extend(self._process_santander(lines))
-        elif bank_name == 'consorcio':
-            transactions.extend(self._process_consorcio(lines))
-        elif bank_name == 'bbva':
-            transactions.extend(self._process_bbva(lines))
-        elif bank_name == 'bci':
-            transactions.extend(self._process_bci(lines))
-        return transactions
-
-    # Existing methods for processing specific banks (e.g., _process_santander, etc.) remain unchanged.
-    # Ensure these methods are designed to work with lines from all supported file formats.
+        # Redirect to the newly created record
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Imported Bank Statement',
+            'res_model': 'bank.statement.processor',
+            'view_mode': 'form',
+            'res_id': bank_statement.id,
+            'target': 'current',
+        }
