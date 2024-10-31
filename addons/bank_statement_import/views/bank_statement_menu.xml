@@ -1,0 +1,10 @@
+<odoo>
+    <menuitem id="menu_bank_statement_import" name="Import Bank Statement" parent="account.menu_finance" action="action_bank_statement_import" sequence="10"/>
+    
+    <record id="action_bank_statement_import" model="ir.actions.act_window">
+        <field name="name">Import Bank Statement</field>
+        <field name="res_model">bank.statement.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
