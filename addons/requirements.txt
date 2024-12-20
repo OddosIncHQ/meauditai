@@ -1,3 +1,0 @@
-pdf417gen
-beautifulsoup4
-lxml
